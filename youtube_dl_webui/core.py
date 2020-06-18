@@ -284,7 +284,10 @@ class Core(object):
         self.msg_mgr.reg_event("worker_done", WorkMsgDispatcher.event_worker_done)
 
         self.server = Server(
-            web_cli, self.conf["server"]["host"], self.conf["server"]["port"]
+            web_cli,
+            self.conf["server"]["host"],
+            self.conf["server"]["port"],
+            self.conf["general"]["download_dir"],
         )
 
     def start(self):

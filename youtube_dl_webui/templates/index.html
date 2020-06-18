@@ -177,6 +177,12 @@
                         <div>
                             <label>Format:</label><input type="text" ref="format" v-model="modalData.add.ydl_opts.format" v-cloak @keyup.esc="showModal = false"/>
                         </div>
+                        <div>
+                            <label>Additional Args:</label><input type="text" ref="args" v-model="modalData.add.ydl_opts.args" v-cloak @keyup.esc="showModal = false"/>
+                        </div>
+                        <div>
+                            <label>Additional Args:</label><select><option>STuff</option><option>Thing</option></select>
+                        </div>
                     </div>
                 </template>
             </modal>
@@ -196,7 +202,8 @@
                             <dt>Format:</dt><dd>{{"{{taskDetails.format}}"}}</dd>
                             <dt>Create Time:</dt><dd>{{"{{tsToLocal(taskDetails.create_time)}}"}}</dd>
                             <dt>Finish Time:</dt><dd>{{"{{tsToLocal(taskDetails.finish_time)}}"}}</dd>
-                            <dt>File Name:</dt><dd style="overflow:auto; white-space:normal;">{{"{{taskDetails.filename}}"}}</dd>
+                            <dt>File Name:</dt><dd style="overflow:auto; white-space:normal;"><a v-bind:href="taskDetails.videourl">{{"{{taskDetails.filename}}"}}</a></dd>
+                            
                         </dl>
                     </div>
                     <div class="details" v-show="showTab === 'Details'" v-cloak>

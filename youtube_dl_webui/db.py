@@ -104,7 +104,7 @@ class DataBase(object):
         return dict(row)
 
     def new_task(self, url, ydl_opts):
-        tid = url2tid(url)
+        tid = url2tid(str(ydl_opts) + url)
 
         self.db.execute("SELECT * FROM task_status WHERE tid=(?)", (tid,))
         if self.db.fetchone() is not None:

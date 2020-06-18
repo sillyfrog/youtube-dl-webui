@@ -57,9 +57,10 @@ class ydl_conf(conf_base):
         # (key,              default_val,                type,       validate_regex,     call_function)
         ("proxy", None, "string", None, None),
         ("format", None, "string", None, None),
+        ("args", None, "string", None, None),
     ]
 
-    _task_settable_fields = set(["format"])
+    _task_settable_fields = set(["format", "args"])
 
     def __init__(self, conf_dict={}):
         self.logger = logging.getLogger("ydl_webui")

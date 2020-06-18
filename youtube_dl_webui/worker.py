@@ -11,12 +11,15 @@ from youtube_dl import DownloadError
 from multiprocessing import Process
 from time import time
 
+from .parseytargs import parsecmdargs
+
 
 class YdlHook(object):
     def __init__(self, tid, msg_cli):
         self.logger = logging.getLogger("ydl_webui")
         self.tid = tid
         self.msg_cli = msg_cli
+        self._cache_d = {}
 
     def finished(self, d):
         self.logger.debug("finished status")
@@ -48,16 +51,27 @@ class YdlHook(object):
             d = self.downloading(d)
         elif d["error"] == "error":
             d = self.error(d)
+        self._cache_d = d
         self.msg_cli.put("progress", {"tid": self.tid, "data": d})
+
+    def updatefilename(self, newname):
+        self._cache_d["filename"] = newname
+        self.msg_cli.put("progress", {"tid": self.tid, "data": self._cache_d})
 
 
 class LogFilter(object):
-    def __init__(self, tid, msg_cli):
+    NEW_FILE_NAME_START = "[ffmpeg] Destination: "
+
+    def __init__(self, tid, msg_cli, newfilenamecallback):
         self.logger = logging.getLogger("ydl_webui")
         self.tid = tid
         self.msg_cli = msg_cli
+        self.newfilenamecallback = newfilenamecallback
 
     def debug(self, msg):
+        if msg.startswith(self.NEW_FILE_NAME_START):
+            newfilename = msg[len(self.NEW_FILE_NAME_START) :]
+            self.newfilenamecallback(newfilename)
         self.logger.debug("debug: %s" % (self.ansi_escape(msg)))
         payload = {"time": int(time()), "type": "debug", "msg": self.ansi_escape(msg)}
         self.msg_cli.put("log", {"tid": self.tid, "data": payload})
@@ -102,10 +116,23 @@ class Worker(Process):
         self.msg_cli = msg_cli
         self.ydl_opts = ydl_opts
         self.first_run = first_run
-        self.log_filter = LogFilter(tid, msg_cli)
+        self.log_filter = LogFilter(tid, msg_cli, self.newfilename_callback)
         self.ydl_hook = YdlHook(tid, msg_cli)
+        self._newfilename = None
+
+    def newfilename_callback(self, newname):
+        self.ydl_hook.updatefilename(newname)
 
     def intercept_ydl_opts(self):
+        args = {}
+        if "args" in self.ydl_opts:
+            strargs = self.ydl_opts["args"]
+            if strargs:
+                args = parsecmdargs(strargs)
+            del self.ydl_opts["args"]
+
+        args.update(self.ydl_opts)
+        self.ydl_opts = args
         self.ydl_opts["logger"] = self.log_filter
         self.ydl_opts["progress_hooks"] = [self.ydl_hook.dispatcher]
         self.ydl_opts["noplaylist"] = "false"

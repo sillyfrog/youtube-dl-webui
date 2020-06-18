@@ -6,6 +6,7 @@ import json
 from flask import Flask
 from flask import render_template
 from flask import request
+from flask import send_from_directory
 from multiprocessing import Process
 from copy import deepcopy
 
@@ -14,6 +15,8 @@ MSG = None
 app = Flask(__name__)
 
 MSG_INVALID_REQUEST = {"status": "error", "errmsg": "invalid request"}
+
+video_dir = None
 
 
 @app.route("/")
@@ -114,6 +117,11 @@ def get_config():
     return json.dumps(MSG.get())
 
 
+@app.route("/videos/<path:filename>")
+def download_file(filename):
+    return send_from_directory(video_dir, filename, as_attachment=True)
+
+
 ###
 # test cases
 ###
@@ -123,15 +131,18 @@ def test(case):
 
 
 class Server(Process):
-    def __init__(self, msg_cli, host, port):
+    def __init__(self, msg_cli, host, port, download_dir):
+        global video_dir
         super(Server, self).__init__()
 
         self.msg_cli = msg_cli
 
         self.host = host
         self.port = port
+        video_dir = download_dir
 
     def run(self):
         global MSG
         MSG = self.msg_cli
+
         app.run(host=self.host, port=int(self.port), use_reloader=False)

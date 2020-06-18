@@ -174,6 +174,8 @@ var videoDownload = (function (Vue, extendAM){
                         if(responseJSON.status === 'error'){
                             return false;
                         }
+                        var details = responseJSON.detail;
+                        details["videourl"] = "/videos/" + encodeURI(details.filename);
                         _self.taskDetails = responseJSON.detail;
                     }, function(err){
                         _self.showAlertToast('Network connection lost', 'error');

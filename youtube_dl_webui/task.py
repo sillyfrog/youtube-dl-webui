@@ -136,7 +136,7 @@ class TaskManager(object):
     def new_task(self, url, ydl_opts={}):
         """Create a new task and put it in inactive type"""
 
-        # stripe out necessary fields
+        # strip out necessary fields
         ydl_opts = ydl_conf(ydl_opts)
         return self._db.new_task(url, ydl_opts.dict())
 
