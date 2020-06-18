@@ -1,0 +1,14 @@
+{
+    "service": "youtube_dl_webui",
+    "name": "youtube_dl_webui",
+    "dockerComposeFile": [
+        "docker-compose.dev.yml",
+    ],
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose",
+    "extensions": [
+        "ms-python.python"
+    ],
+    "overrideCommand": true,
+    "postCreateCommand": "/usr/local/bin/pip install flake8 black",
+}

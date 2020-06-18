@@ -1,0 +1,33 @@
+version: '3.3'
+services:
+  youtube_dl_webui:
+    image: localhost:5000/youtube_dl_webui
+    command:
+      ["sleep", "infinity"]
+    build:
+      context: ../
+    volumes:
+      - ../:/workspace/
+      # This lets you avoid setting up Git again in the container
+      - ~/.gitconfig:/root/.gitconfig
+      - ~/.config/:/root/.config/
+      - ~/docker/coredev/etc/localtime:/etc/localtime
+    environment:
+      PYTHONPATH: /app/
+      DEBUG: 1
+    labels:
+      - "traefik.http.routers.youtube_dl_webui.rule=PathPrefix(`/`)"
+      - "traefik.http.services.youtube_dl_webui-service.loadbalancer.server.port=5000"
+
+  traefik:
+    image: "traefik:2.2"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    restart: always
+    environment:
+      - "stuff=1"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command: --api.insecure=true --providers.docker # --log.level=DEBUG
