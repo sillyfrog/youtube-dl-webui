@@ -18,58 +18,64 @@ from .utils import state_index
 
 from .worker import Worker
 
-class Task(object):
 
+class Task(object):
     def __init__(self, tid, msg_cli, ydl_opts={}, info={}, status={}, log_size=10):
-        self.logger = logging.getLogger('ydl_webui')
+        self.logger = logging.getLogger("ydl_webui")
         self.tid = tid
         self.ydl_opts = ydl_opts
         self.ydl_conf = ydl_conf(ydl_opts)
         self.info = info
-        self.url = info['url']
+        self.url = info["url"]
         self.log = deque(maxlen=log_size)
         self.msg_cli = msg_cli
         self.touch = time()
         self.state = None
-        self.elapsed = status['elapsed']
-        self.first_run = True if info['valid'] == 0 else False
+        self.elapsed = status["elapsed"]
+        self.first_run = True if info["valid"] == 0 else False
 
-        log_list = json.loads(status['log'])
+        log_list = json.loads(status["log"])
         for log in log_list:
             self.log.appendleft(log)
 
     def start(self):
-        self.logger.info('Task starts, url: %s(%s), ydl_opts: %s' %(self.url, self.tid, self.ydl_opts))
+        self.logger.info(
+            "Task starts, url: %s(%s), ydl_opts: %s"
+            % (self.url, self.tid, self.ydl_opts)
+        )
         tm = time()
-        self.state = state_index['downloading']
+        self.state = state_index["downloading"]
 
         self.start_time = tm
         self.elapsed = self.elapsed + (tm - self.touch)
         self.touch = tm
 
-        self.worker = Worker(self.tid, self.info['url'],
-                             msg_cli=self.msg_cli,
-                             ydl_opts=self.ydl_opts,
-                             first_run=self.first_run)
-        self.log.appendleft({'time': int(tm), 'type': 'debug', 'msg': 'Task starts...'})
+        self.worker = Worker(
+            self.tid,
+            self.info["url"],
+            msg_cli=self.msg_cli,
+            ydl_opts=self.ydl_opts,
+            first_run=self.first_run,
+        )
+        self.log.appendleft({"time": int(tm), "type": "debug", "msg": "Task starts..."})
         self.worker.start()
 
     def pause(self):
-        self.logger.info('Task pauses, url - %s(%s)' %(self.url, self.tid))
+        self.logger.info("Task pauses, url - %s(%s)" % (self.url, self.tid))
         tm = time()
-        self.state = state_index['paused']
+        self.state = state_index["paused"]
 
         self.pause_time = tm
         self.elapsed = self.elapsed + (tm - self.touch)
         self.touch = tm
 
         self.worker.stop()
-        self.log.appendleft({'time': int(tm), 'type': 'debug', 'msg': 'Task pauses...'})
+        self.log.appendleft({"time": int(tm), "type": "debug", "msg": "Task pauses..."})
 
     def halt(self):
-        self.logger.info('Task halts, url - %s(%s)' %(self.url, self.tid))
+        self.logger.info("Task halts, url - %s(%s)" % (self.url, self.tid))
         tm = time()
-        self.state = state_index['invalid']
+        self.state = state_index["invalid"]
 
         self.halt_time = tm
         self.finish_time = tm
@@ -77,12 +83,12 @@ class Task(object):
         self.touch = tm
 
         self.worker.stop()
-        self.log.appendleft({'time': int(tm), 'type': 'debug', 'msg': 'Task halts...'})
+        self.log.appendleft({"time": int(tm), "type": "debug", "msg": "Task halts..."})
 
     def finish(self):
-        self.logger.info('Task finishes, url - %s(%s)' %(self.url, self.tid))
+        self.logger.info("Task finishes, url - %s(%s)" % (self.url, self.tid))
         tm = time()
-        self.state = state_index['finished']
+        self.state = state_index["finished"]
 
         self.pause_time = tm
         self.finish_time = tm
@@ -90,7 +96,9 @@ class Task(object):
         self.touch = tm
 
         self.worker.stop()
-        self.log.appendleft({'time': int(tm), 'type': 'debug', 'msg': 'Task finishs...'})
+        self.log.appendleft(
+            {"time": int(tm), "type": "debug", "msg": "Task finishs..."}
+        )
 
     def update_info(self, info_dict):
         self.first_run = False
@@ -113,14 +121,15 @@ class TaskManager(object):
     are in invalid state or finished state, which only have database recoards
     but memory instance.
     """
-    ExerptKeys = ['tid', 'state', 'percent', 'total_bytes', 'title', 'eta', 'speed']
+
+    ExerptKeys = ["tid", "state", "percent", "total_bytes", "title", "eta", "speed"]
 
     def __init__(self, db, msg_cli, conf):
-        self.logger = logging.getLogger('ydl_webui')
+        self.logger = logging.getLogger("ydl_webui")
         self._db = db
         self._msg_cli = msg_cli
         self._conf = conf
-        self.ydl_conf = conf['youtube_dl']
+        self.ydl_conf = conf["youtube_dl"]
 
         self._tasks_dict = {}
 
@@ -137,21 +146,27 @@ class TaskManager(object):
         task = None
         if tid in self._tasks_dict:
             task = self._tasks_dict[tid]
-            if task.state == state_index['downloading']:
-                raise TaskError('Task is downloading')
+            if task.state == state_index["downloading"]:
+                raise TaskError("Task is downloading")
         else:
             try:
                 ydl_opts = self.ydl_conf.merge_conf(self._db.get_ydl_opts(tid))
-                info     = self._db.get_info(tid)
-                status   = self._db.get_stat(tid)
+                info = self._db.get_info(tid)
+                status = self._db.get_stat(tid)
             except TaskInexistenceError as e:
                 raise TaskInexistenceError(e.msg)
 
-            if status['state'] == state_index['finished']:
-                raise TaskError('Task is finished')
+            if status["state"] == state_index["finished"]:
+                raise TaskError("Task is finished")
 
-            task = Task(tid, self._msg_cli, ydl_opts=ydl_opts, info=info,
-                        status=status, log_size=self._conf['general']['log_size'])
+            task = Task(
+                tid,
+                self._msg_cli,
+                ydl_opts=ydl_opts,
+                info=info,
+                status=status,
+                log_size=self._conf["general"]["log_size"],
+            )
             self._tasks_dict[tid] = task
 
         task.start()
@@ -161,24 +176,24 @@ class TaskManager(object):
         return task
 
     def pause_task(self, tid):
-        self.logger.debug('task paused (%s)' %(tid))
+        self.logger.debug("task paused (%s)" % (tid))
 
         if tid not in self._tasks_dict:
-            raise TaskError('Task is finished or invalid or inexistent')
+            raise TaskError("Task is finished or invalid or inexistent")
 
         task = self._tasks_dict[tid]
-        if task.state == state_index['paused']:
-            raise TaskError('Task already paused')
+        if task.state == state_index["paused"]:
+            raise TaskError("Task already paused")
 
         task.pause()
         self._db.pause_task(tid, pause_time=task.pause_time, elapsed=task.elapsed)
         self._db.update_log(tid, task.log)
 
     def finish_task(self, tid):
-        self.logger.debug('task finished (%s)' %(tid))
+        self.logger.debug("task finished (%s)" % (tid))
 
         if tid not in self._tasks_dict:
-            raise TaskInexistenceError('task does not exist')
+            raise TaskInexistenceError("task does not exist")
 
         task = self._tasks_dict[tid]
         task.finish()
@@ -187,10 +202,10 @@ class TaskManager(object):
         del self._tasks_dict[tid]
 
     def halt_task(self, tid):
-        self.logger.debug('task halted (%s)' %(tid))
+        self.logger.debug("task halted (%s)" % (tid))
 
         if tid not in self._tasks_dict:
-            raise TaskInexistenceError('task does not exist')
+            raise TaskInexistenceError("task does not exist")
 
         task = self._tasks_dict[tid]
         task.halt()
@@ -199,7 +214,7 @@ class TaskManager(object):
         del self._tasks_dict[tid]
 
     def delete_task(self, tid, del_file=False):
-        self.logger.debug('task deleted (%s)' %(tid))
+        self.logger.debug("task deleted (%s)" % (tid))
 
         if tid in self._tasks_dict:
             task = self._tasks_dict[tid]
@@ -213,12 +228,12 @@ class TaskManager(object):
 
         if del_file and dl_file is not None:
             file_wo_ext, ext = dl_file, None
-            while ext != '':
+            while ext != "":
                 file_wo_ext, ext = os.path.splitext(file_wo_ext)
 
             for fname in os.listdir(os.getcwd()):
                 if fname.startswith(file_wo_ext):
-                    self.logger.debug('delete file: %s' %(fname))
+                    self.logger.debug("delete file: %s" % (fname))
                     os.remove(os.path.join(os.getcwd(), fname))
 
     def query(self, tid, exerpt=True):
@@ -250,7 +265,7 @@ class TaskManager(object):
 
     def update_info(self, tid, info_dict):
         if tid not in self._tasks_dict:
-            raise TaskInexistenceError('task does not exist')
+            raise TaskInexistenceError("task does not exist")
 
         task = self._tasks_dict[tid]
         task.update_info(info_dict)
@@ -260,7 +275,7 @@ class TaskManager(object):
     def update_log(self, tid, log):
         if tid not in self._tasks_dict:
             #  raise TaskInexistenceError('task does not exist')
-            self.logger.error('Task does not active, tid=%s' %(tid))
+            self.logger.error("Task does not active, tid=%s" % (tid))
             return
 
         task = self._tasks_dict[tid]
@@ -269,15 +284,15 @@ class TaskManager(object):
 
     def progress_update(self, tid, data):
         if tid not in self._tasks_dict:
-            raise TaskInexistenceError('task does not exist')
+            raise TaskInexistenceError("task does not exist")
 
         task = self._tasks_dict[tid]
         task.progress_update(data)
 
-        if 'total_bytes' in data:
-            data['total_bytes_estmt'] = data['total_bytes']
+        if "total_bytes" in data:
+            data["total_bytes_estmt"] = data["total_bytes"]
         else:
-            data['total_bytes'] = '0'
+            data["total_bytes"] = "0"
 
         self._db.progress_update(tid, data, task.elapsed)
 
@@ -290,5 +305,4 @@ class TaskManager(object):
             except TaskError as e:
                 self.logger.warn("Task %s is in downloading or finished state", tid)
             except TaskInexistenceError:
-                self.logger.error('Task does not exist')
-
+                self.logger.error("Task does not exist")

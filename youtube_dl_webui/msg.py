@@ -7,37 +7,36 @@ from multiprocessing import Process, Queue
 
 from .utils import new_uuid
 
-class MsgBase(object):
 
+class MsgBase(object):
     def __init__(self, getQ, putQ):
         self.getQ = getQ
         self.putQ = putQ
 
 
 class SvrMsg(MsgBase):
-
     def __init__(self, getQ, putQ):
         super(SvrMsg, self).__init__(getQ, putQ)
 
     def put(self, data):
-        payload = {'__data__': data}
+        payload = {"__data__": data}
         self.putQ.put(payload)
 
 
 class CliMsg(MsgBase):
-
     def __init__(self, uuid, getQ, putQ):
         super(CliMsg, self).__init__(getQ, putQ)
 
         self.uuid = uuid
 
     def put(self, event, data):
-        payload = {'__uuid__': self.uuid, '__event__': event, '__data__': data}
+        payload = {"__uuid__": self.uuid, "__event__": event, "__data__": data}
         self.putQ.put(payload)
 
     def get(self):
         raw_msg = self.getQ.get()
-        return raw_msg['__data__']
+        return raw_msg["__data__"]
+
 
 class MsgMgr(object):
     _svrQ = Queue()
@@ -72,14 +71,13 @@ class MsgMgr(object):
     def run(self):
         while True:
             raw_msg = self._svrQ.get()
-            uuid = raw_msg['__uuid__']
-            evnt = raw_msg['__event__']
-            data = raw_msg['__data__']
+            uuid = raw_msg["__uuid__"]
+            evnt = raw_msg["__event__"]
+            data = raw_msg["__data__"]
 
             cli = self._cli_dict[uuid]
-            cb  = self._evnt_cb_dict[evnt][0]
+            cb = self._evnt_cb_dict[evnt][0]
             arg = self._evnt_cb_dict[evnt][1]
 
             svr = SvrMsg(cli.putQ, cli.getQ)
             cb(svr, evnt, data, arg)
-
