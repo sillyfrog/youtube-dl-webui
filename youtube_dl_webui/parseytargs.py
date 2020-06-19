@@ -54,7 +54,7 @@ def parsecmdargs(argstr):
         youtube_dl_init._real_main(args)
     except BreakerError:
         pass
-    return lastargs
+    return lastargs, args
 
 
 def main():

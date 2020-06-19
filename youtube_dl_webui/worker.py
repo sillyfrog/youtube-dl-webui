@@ -60,7 +60,10 @@ class YdlHook(object):
 
 
 class LogFilter(object):
-    NEW_FILE_NAME_START = "[ffmpeg] Destination: "
+    NEW_FILE_NAME_START = [
+        re.compile(r"\[ffmpeg\] Destination: (.+)"),
+        re.compile(r'\[ffmpeg\] Merging formats into "(.+)"'),
+    ]
 
     def __init__(self, tid, msg_cli, newfilenamecallback):
         self.logger = logging.getLogger("ydl_webui")
@@ -69,9 +72,10 @@ class LogFilter(object):
         self.newfilenamecallback = newfilenamecallback
 
     def debug(self, msg):
-        if msg.startswith(self.NEW_FILE_NAME_START):
-            newfilename = msg[len(self.NEW_FILE_NAME_START) :]
-            self.newfilenamecallback(newfilename)
+        for nfre in self.NEW_FILE_NAME_START:
+            match = nfre.match(msg)
+            if match:
+                self.newfilenamecallback(match.group(1))
         self.logger.debug("debug: %s" % (self.ansi_escape(msg)))
         payload = {"time": int(time()), "type": "debug", "msg": self.ansi_escape(msg)}
         self.msg_cli.put("log", {"tid": self.tid, "data": payload})
@@ -128,7 +132,9 @@ class Worker(Process):
         if "args" in self.ydl_opts:
             strargs = self.ydl_opts["args"]
             if strargs:
-                args = parsecmdargs(strargs)
+                args, argsparts = parsecmdargs(strargs)
+            if "-f" in argsparts or "--format" in argsparts:
+                del self.ydl_opts["format"]
             del self.ydl_opts["args"]
 
         args.update(self.ydl_opts)

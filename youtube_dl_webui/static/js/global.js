@@ -93,6 +93,7 @@ var videoDownload = (function (Vue, extendAM) {
                     var url = _self.headPath + 'config';
                     Vue.http.post(url, _self.modalData.preference, { emulateJSON: false }).then(function (res) {
                         console.log("Successfully");
+                        _self.showModal = false;
                     }, function (err) {
                         _self.showAlertToast(err, 'error');
                     });
@@ -152,11 +153,12 @@ var videoDownload = (function (Vue, extendAM) {
                             return false;
                         } else {
                             config = responseJSON['config'];
-                            _self.modalData.preference.general.download_dir = config.general.download_dir;
-                            _self.modalData.preference.general.db_path = config.general.db_path;
-                            _self.modalData.preference.general.log_size = config.general.log_size;
-                            _self.modalData.preference.youtube_dl.format = config.youtube_dl.format;
-                            _self.modalData.preference.youtube_dl.proxy = config.youtube_dl.proxy;
+                            // _self.modalData.preference.general.download_dir = config.general.download_dir;
+                            // _self.modalData.preference.general.db_path = config.general.db_path;
+                            // _self.modalData.preference.general.log_size = config.general.log_size;
+                            // _self.modalData.preference.youtube_dl.format = config.youtube_dl.format;
+                            // _self.modalData.preference.youtube_dl.proxy = config.youtube_dl.proxy;
+                            _self.modalData.preference = config;
                         }
                     });
                 },
@@ -305,3 +307,9 @@ var videoDownload = (function (Vue, extendAM) {
 
 
 videoDownload.init();
+
+function definedProfileChange(e) {
+    if (e.value) {
+        videoDownload.vm.modalData.add.ydl_opts.args = e.value;
+    }
+}

@@ -208,15 +208,26 @@
                             v-cloak @keyup.esc="showModal = false" />
                     </div>
                     <div>
+                        <label>Defined Profiles:</label>
+                        <select onchange="definedProfileChange(this);">
+                            <option value="">-</option>
+                            <option value="--extract-audio --audio-format mp3 --format bestaudio">Audio Only (.mp3)
+                            </option>
+                            <option value="--merge-output-format mp4 --recode-video mp4 --embed-subs">Video (.mp4)
+                            </option>
+                            <option value="--merge-output-format mkv --recode-video mkv --embed-subs">Video (.mkv)
+                            </option>
+                        </select>
+                    </div>
+                    <div>
                         <label>Additional Args:</label><input type="text" ref="args"
                             v-model="modalData.add.ydl_opts.args" v-cloak @keyup.esc="showModal = false" />
                     </div>
-                    <div>
-                        <label>Additional Args:</label><select>
-                            <option>STuff</option>
-                            <option>Thing</option>
-                        </select>
-                    </div>
+                    <small>Additional Args as passed to <span style="font-family: monospace;">youtube-dl</span> on the
+                        command line (run <span style="font-family: monospace;">youtube-dl -h</span> to see all
+                        options). These will be parsed in a similar manner to bash, so strings etc will need to be
+                        quoted. If <span style="font-family: monospace;">--format</span> is supplied, it will override
+                        the default and that set in "Format" above.</small>
                 </div>
             </template>
         </modal>

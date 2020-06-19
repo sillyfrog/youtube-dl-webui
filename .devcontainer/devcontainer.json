@@ -10,5 +10,5 @@
         "ms-python.python"
     ],
     "overrideCommand": true,
-    "postCreateCommand": "/usr/local/bin/pip install flake8 black",
+    "postCreateCommand": "echo FLASK_ENV=development python -m youtube_dl_webui -c /config.json >> /root/.bash_history ; /usr/local/bin/pip install flake8 black",
 }
