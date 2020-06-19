@@ -8,7 +8,7 @@ from flask import render_template
 from flask import request
 from flask import send_from_directory
 from multiprocessing import Process
-from copy import deepcopy
+import subprocess
 
 MSG = None
 
@@ -17,11 +17,12 @@ app = Flask(__name__)
 MSG_INVALID_REQUEST = {"status": "error", "errmsg": "invalid request"}
 
 video_dir = None
+youtubedl_help = None
 
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", youtubedl_help=youtubedl_help)
 
 
 @app.route("/task", methods=["POST"])
@@ -132,14 +133,18 @@ def test(case):
 
 class Server(Process):
     def __init__(self, msg_cli, host, port, download_dir):
-        global video_dir
+        global video_dir, youtubedl_help
         super(Server, self).__init__()
 
         self.msg_cli = msg_cli
 
         self.host = host
         self.port = port
+
         video_dir = download_dir
+        youtubedl_help = subprocess.run(
+            ["youtube-dl", "-h"], capture_output=True, text=True
+        ).stdout
 
     def run(self):
         global MSG

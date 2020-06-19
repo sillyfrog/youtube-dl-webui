@@ -224,10 +224,16 @@
                             v-model="modalData.add.ydl_opts.args" v-cloak @keyup.esc="showModal = false" />
                     </div>
                     <small>Additional Args as passed to <span style="font-family: monospace;">youtube-dl</span> on the
-                        command line (run <span style="font-family: monospace;">youtube-dl -h</span> to see all
-                        options). These will be parsed in a similar manner to bash, so strings etc will need to be
+                        command line (expand the below element to see the options).
+                        These will be parsed in a similar manner to bash, so strings etc will need to be
                         quoted. If <span style="font-family: monospace;">--format</span> is supplied, it will override
                         the default and that set in "Format" above.</small>
+                    <p>
+                        <a href="#" onclick="helptxt.style.display=''; this.style.display='None'; return false;">Show
+                            <span style="font-family: monospace;">youtube-dl -h</span></a>
+                    </p>
+                    <pre style="font-size: 80%; overflow: scroll; display: none;"
+                        id="helptxt">{{ youtubedl_help }}</pre>
                 </div>
             </template>
         </modal>
